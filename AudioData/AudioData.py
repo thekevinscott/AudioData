@@ -1,5 +1,6 @@
 from .utils import getLabelFromFile, getFilesFromDir
 import os
+from pydub import AudioSegment
 
 DEFAULTS = {
     'channels': 1,
@@ -47,6 +48,7 @@ class AudioData:
                 for file in files:
                     self._add_file(type, file, label)
             else:
+                assert os.path.isfile(file), "File %s is not valid" % (file)
                 self._add_file(type, file, label)
 
     def _add_file(self, type, file, label):
@@ -55,7 +57,12 @@ class AudioData:
         else:
             file_label = label
 
+        audio = AudioSegment.from_file(file)
+        audio = audio.set_channels(self.channels)
+        audio = audio.set_sample_width(self.bytes)
+        audio = audio.set_frame_rate(self.frame_rate)
         self._files[type].append({
+            'audio': audio,
             'file': file,
             'label': file_label,
         })

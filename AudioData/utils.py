@@ -3,7 +3,8 @@ import subprocess
 import re
 
 def getLabelFromFile(file: str):
-    return file.split('/')[-2:-1][0]
+    path = os.path.abspath(file)
+    return path.split('/')[-2:-1][0]
 
 def getFilesFromDir(folder, ext=None):
     escaped_folder = '\\ '.join(folder.split(' '))

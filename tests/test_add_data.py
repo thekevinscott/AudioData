@@ -32,14 +32,10 @@ def test_add_data_can_read_files_and_discovers_label(tmpdir_factory):
     audioData = AudioData()
     audioData.add_data(type='train', data=[str(file), str(file2)])
     assert len(audioData._files['train']) == 2
-    assert audioData._files['train'][0] == {
-        'file': file,
-        'label': str(file).split('/')[-2:-1][0]
-    }
-    assert audioData._files['train'][1] == {
-        'file': file2,
-        'label': str(file2).split('/')[-2:-1][0]
-    }
+    assert audioData._files['train'][0]['file'] == file
+    assert audioData._files['train'][0]['label'] == str(file).split('/')[-2:-1][0]
+    assert audioData._files['train'][1]['file'] == file2
+    assert audioData._files['train'][1]['label'] == str(file2).split('/')[-2:-1][0]
 
 def test_add_data_can_read_directories(tmpdir_factory):
     file1 = tmpdir_factory.mktemp('dir1').join('tmp.wav')
@@ -78,10 +74,8 @@ def test_add_data_can_accept_a_label(tmpdir_factory):
     audioData = AudioData()
     audioData.add_data(type='train', data=[str(file)], label='foo')
     assert len(audioData._files['train']) == 1
-    assert audioData._files['train'][0] == {
-        'file': file,
-        'label': 'foo',
-    }
+    assert audioData._files['train'][0]['file'] == file
+    assert audioData._files['train'][0]['label'] == 'foo'
 
 def test_add_data_can_accept_a_label_for_mixed_files_and_directories(tmpdir_factory):
     file1 = tmpdir_factory.mktemp('dir1').join('tmp.wav')
@@ -97,3 +91,9 @@ def test_add_data_can_accept_a_label_for_mixed_files_and_directories(tmpdir_fact
     assert audioData._files['train'][0]['label'] == 'foo'
     assert audioData._files['train'][1]['file'] == str(file2)
     assert audioData._files['train'][1]['label'] == 'foo'
+
+def test_add_data_raises_on_missing_file():
+    audioData = AudioData()
+
+    with pytest.raises(Exception):
+        audioData.add_data(type='train', data=['foo'])
