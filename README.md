@@ -2,9 +2,28 @@
 
 Convenience methods for parsing audio into formats VGGish can read.
 
+## Motivation
+
+I'm building an audio classifier on top of VGGish, and found myself continually struggling with making sure audio data was in the right format, as well as being transparent enough for feedback (understanding which audio files were misclassified).
+
+I put this library together to abstract away the audio data processing. It heavily leverages Pydub for much of the processing.
+
 ## Quickstart
 
+```
+from VGGishAudioData import AudioData
+audioData = AudioData()
+
+audioData.add_data(type='train', data=['/path/to/file.wav', 'other/path/file.wav'])
+
+audioData.get_data(type='train')
+```
+
 ## Installation
+
+```
+pip install vggish_audio_data
+```
 
 ## API
 
@@ -42,12 +61,13 @@ audioData.set_bits(16)
 
 ### `add_data`
 
-Adds data for later retrieval.
+Adds data for later retrieval. Accepts an explicit `label`, otherwise will infer label based on the file path.
 
 ```
 audioData.add_data(type='train', data=['/path/to/file.wav', '/path/to/dir/of/files'], label='some_label')
 
-# can also infer labels from the file or directory names. These will be labeled "label_one" and "label_two"
+# if 'label' is omitted, will infer labels from the file or directory names.
+# This example data will be labeled 'label_one' and 'label_two'
 audioData.add_data(type='train', data=[
   'data/label_one/file.wav', # a single file
   'data/label_two', # a directory of files
