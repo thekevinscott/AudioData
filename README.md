@@ -19,12 +19,6 @@ audioData.add_data(type='train', data=['/path/to/file.wav', 'other/path/file.wav
 audioData.get_data(type='train')
 ```
 
-## Installation
-
-```
-pip install vggish_audio_data
-```
-
 ## API
 
 All methods return self unless otherwise noted.
@@ -53,10 +47,10 @@ audioData.set_channels(2)
 audioData.set_frame_rate(44100)
 ```
 
-### `set_bits`
+### `set_bytes`
 
 ```
-audioData.set_bits(16)
+audioData.set_bytes(2)
 ```
 
 ### `add_data`
