@@ -103,7 +103,7 @@ class AudioData:
         files = get_transformed_files(files, transforms)
 
         #3. slice into chunks
-        chunks = self.slice_into_chunks(files, channels=self.channels, bytes=self.bytes, frame_rate=self.frame_rate)
+        chunks = self.slice_into_single_sample_chunks(files)
 
         #4. balance data
         print('also balance data')
@@ -147,7 +147,7 @@ class AudioData:
 
         return audio
 
-    def slice_into_chunks(self, files, **kwargs):
+    def slice_into_single_sample_chunks(self, files):
         chunks = []
         for file in files:
             audio = file['audio']
