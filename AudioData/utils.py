@@ -5,11 +5,8 @@ import random
 from typing import Dict, List
 from pydub import AudioSegment
 
-def load(path, channels:int, bytes: int, frame_rate: int):
+def load(path):
     audio = AudioSegment.from_file(path)
-    audio = audio.set_channels(channels)
-    audio = audio.set_sample_width(bytes)
-    audio = audio.set_frame_rate(frame_rate)
     return audio
 
 def get_label_from_file(file: str):
@@ -91,19 +88,3 @@ def split_data(split, *args):
         tuple(arg[0:cut] for arg in args),
         tuple(arg[cut:] for arg in args),
     )
-
-def slice_into_chunks(files):
-    chunks = []
-    for file in files:
-        audio = file['audio']
-        for i in range(0, len(audio), 960):
-            start = i
-            end = start + 960
-            if len(audio) >= end:
-                chunks.append({
-                    'file': file['file'],
-                    'start_index': i + file['start_index'],
-                    'audio': file['audio'][start:end],
-                    'label': file['label'],
-                })
-    return chunks

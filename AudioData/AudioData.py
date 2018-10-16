@@ -1,9 +1,10 @@
 from .utils import get_label_from_file, get_files_from_dir
 from .utils import get_sliced_audio_files, get_transformed_files
 from .utils import shuffle_chunks, separate_chunks, split_data
-from .utils import slice_into_chunks, load
+from .utils import load
 import os
 from typing import Dict, List
+from .vggish_input import waveform_to_examples
 
 DEFAULTS = {
     'channels': 1,
@@ -60,8 +61,7 @@ class AudioData:
         else:
             file_label = label
 
-        audio = load(file, channels=self.channels, bytes=self.bytes,
-                frame_rate=self.frame_rate)
+        audio = load(file)
         self._files[type].append({
             'audio': audio,
             'file': file,
@@ -90,12 +90,15 @@ class AudioData:
         files = get_transformed_files(files, transforms)
 
         #3. slice into chunks
-        chunks = slice_into_chunks(files)
+        chunks = self.slice_into_chunks(files, channels=self.channels, bytes=self.bytes, frame_rate=self.frame_rate)
 
-        #4. shuffle
+        #4. balance data
+        print('also balance data')
+
+        #5. shuffle
         chunks = shuffle_chunks(chunks, shuffle)
 
-        #5. separate into components
+        #6. separate into components
         samples, audio, labels, refs = separate_chunks(chunks, [
             'samples',
             'audio',
@@ -106,7 +109,43 @@ class AudioData:
             ],
         ])
 
-        #6. split the data
+        #7. split the data
         splits = split_data(split, samples, labels, refs)
 
         return splits
+
+    def preprocess_audio(self, audio, channels:int = None, bytes: int = None,
+            frame_rate: int = None):
+        if channels is None:
+            channels = self.channels
+        if bytes is None:
+            bytes = self.bytes
+        if frame_rate is None:
+            frame_rate = self.frame_rate
+
+        audio = audio.set_channels(channels)
+        audio = audio.set_sample_width(bytes)
+        audio = audio.set_frame_rate(frame_rate)
+        return audio
+
+    def slice_into_chunks(self, files, **kwargs):
+        chunks = []
+        for file in files:
+            audio = self.preprocess_audio(file['audio'], **kwargs)
+            samples = audio.get_samples_as_array()
+            print('update this to handle other frame rates')
+            frame_rate = 44100
+            for i in range(0, len(samples), frame_rate):
+                start = i
+                end = start + frame_rate
+                if len(samples) >= end:
+                    sliced_samples = samples[start:end]
+                    chunks.append({
+                        'samples': sliced_samples,
+                        'vggish_samples': waveform_to_examples(sliced_samples),
+                        'file': file['file'],
+                        'start_index': i + file['start_index'],
+                        # 'audio': file['audio'][start:end],
+                        'label': file['label'],
+                    })
+        return chunks
