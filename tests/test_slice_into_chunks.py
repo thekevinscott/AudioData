@@ -1,0 +1,41 @@
+import pytest
+import random
+from ..AudioData.utils import slice_into_chunks
+from pydub.generators import Sine
+
+def test_it_returns_chunks():
+    audio = Sine(440).to_audio_segment()
+    files = [{
+        'audio': audio[0:960],
+        'file': 'foo',
+        'label': 'foo',
+        'start_index': 0,
+    }]
+
+    chunks = slice_into_chunks(files)
+    assert len(chunks) == 1
+
+def test_it_returns_one_chunk_for_excess_audio():
+    audio = Sine(440).to_audio_segment() * 2
+    files = [{
+        'audio': audio[0:1500],
+        'file': 'foo',
+        'label': 'foo',
+        'start_index': 0,
+    }]
+
+    chunks = slice_into_chunks(files)
+    assert len(chunks) == 1
+
+def test_it_returns_multiple_chunks():
+    audio = Sine(440).to_audio_segment() * 5
+    files = [{
+        'audio': audio,
+        'file': 'foo',
+        'label': 'foo',
+        'start_index': 0,
+        'samples': [],
+    }]
+
+    chunks = slice_into_chunks(files)
+    assert len(chunks) == 5

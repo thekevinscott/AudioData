@@ -1,6 +1,9 @@
-from .utils import getLabelFromFile, getFilesFromDir
+from .utils import get_label_from_file, get_files_from_dir
+from .utils import get_sliced_audio_files, get_transformed_files
+from .utils import shuffle_chunks, separate_chunks, split_data
+from .utils import slice_into_chunks, load
 import os
-from pydub import AudioSegment
+from typing import Dict, List
 
 DEFAULTS = {
     'channels': 1,
@@ -14,7 +17,7 @@ class AudioData:
 
         assert frame_rate > 0, "Frame rate must be greater than 0"
 
-        self._files = {}
+        self._files = {} # type: Dict[str, List[Dict]]
 
         self.set_channels(channels)
         self.set_bytes(bytes)
@@ -44,7 +47,7 @@ class AudioData:
                 self._files[type] = []
 
             if os.path.isdir(file):
-                files = getFilesFromDir(file, r"(.*)\.wav$")
+                files = get_files_from_dir(file, r"(.*)\.wav$")
                 for file in files:
                     self._add_file(type, file, label)
             else:
@@ -53,16 +56,57 @@ class AudioData:
 
     def _add_file(self, type, file, label):
         if label is None:
-            file_label = getLabelFromFile(file)
+            file_label = get_label_from_file(file)
         else:
             file_label = label
 
-        audio = AudioSegment.from_file(file)
-        audio = audio.set_channels(self.channels)
-        audio = audio.set_sample_width(self.bytes)
-        audio = audio.set_frame_rate(self.frame_rate)
+        audio = load(file, channels=self.channels, bytes=self.bytes,
+                frame_rate=self.frame_rate)
         self._files[type].append({
             'audio': audio,
             'file': file,
             'label': file_label,
         })
+
+    """ Returns a tuple:
+   samples - either a single numpy array, (,96,64), or two numpy arrays, if
+   split
+
+   labels - either a single array of labels, or two arrays, if split. NOT one
+   hot encoded
+
+   audio_segments - an array of objects, that contain a 1 second pydub segment, the path
+   of the file, and the starting index (in samples) of the file
+
+    """
+    def get_data(self, type: str, split: float = None, shuffle: bool = False,
+            transforms = [], random_window: bool = True, returns = []):
+        files = self._files[type].copy()
+
+        #1. if random window, slice off one second of audio files
+        files = get_sliced_audio_files(files, random_window)
+
+        #2. transform those files
+        files = get_transformed_files(files, transforms)
+
+        #3. slice into chunks
+        chunks = slice_into_chunks(files)
+
+        #4. shuffle
+        chunks = shuffle_chunks(chunks, shuffle)
+
+        #5. separate into components
+        samples, audio, labels, refs = separate_chunks(chunks, [
+            'samples',
+            'audio',
+            'label',
+            [
+                'file',
+                'start_index',
+            ],
+        ])
+
+        #6. split the data
+        splits = split_data(split, samples, labels, refs)
+
+        return splits
