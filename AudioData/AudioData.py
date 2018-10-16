@@ -1,10 +1,10 @@
 from .utils import get_label_from_file, get_files_from_dir
 from .utils import get_sliced_audio_files, get_transformed_files
 from .utils import shuffle_chunks, separate_chunks, split_data
-from .utils import load
 import os
 from typing import Dict, List
 from .vggish_input import waveform_to_examples
+from pydub import AudioSegment
 
 DEFAULTS = {
     'channels': 1,
@@ -27,14 +27,17 @@ class AudioData:
     def set_channels(self, channels:int):
         assert channels >= 1 and channels <= 2, "Channels must be between 1 and 2 channels"
         self.channels = channels
+        self.reprocess_audio()
 
     def set_bytes(self, bytes:int):
         assert bytes > 0, "Bytes must be greater than 0"
         self.bytes = bytes
+        self.reprocess_audio()
 
     def set_frame_rate(self, frame_rate:int):
         assert frame_rate > 0, "Frame Rate must be greater than 0"
         self.frame_rate = frame_rate
+        self.reprocess_audio()
 
     def clear_data(self, type:str = None):
         if type is not None:
@@ -55,13 +58,23 @@ class AudioData:
                 assert os.path.isfile(file), "File %s is not valid" % (file)
                 self._add_file(type, file, label)
 
+    def load(self, path):
+        audio = AudioSegment.from_file(path)
+        audio = self.preprocess_audio(audio, channels=self.channels, bytes=self.bytes, frame_rate=self.frame_rate)
+        return audio
+
+    def reprocess_audio(self):
+        for file in self._files:
+            audio = self.load(file['file'])
+            file['audio'] = audio
+
     def _add_file(self, type, file, label):
         if label is None:
             file_label = get_label_from_file(file)
         else:
             file_label = label
 
-        audio = load(file)
+        audio = self.load(file)
         self._files[type].append({
             'audio': audio,
             'file': file,
@@ -123,15 +136,21 @@ class AudioData:
         if frame_rate is None:
             frame_rate = self.frame_rate
 
-        audio = audio.set_channels(channels)
-        audio = audio.set_sample_width(bytes)
-        audio = audio.set_frame_rate(frame_rate)
+        if audio.channels != channels:
+            audio = audio.set_channels(channels)
+
+        if audio.bytes != bytes:
+            audio = audio.set_sample_width(bytes)
+
+        if audio.frame_rate != frame_rate:
+            audio = audio.set_frame_rate(frame_rate)
+
         return audio
 
     def slice_into_chunks(self, files, **kwargs):
         chunks = []
         for file in files:
-            audio = self.preprocess_audio(file['audio'], **kwargs)
+            audio = file['audio']
             samples = audio.get_samples_as_array()
             print('update this to handle other frame rates')
             frame_rate = 44100

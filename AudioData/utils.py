@@ -3,11 +3,6 @@ import subprocess
 import re
 import random
 from typing import Dict, List
-from pydub import AudioSegment
-
-def load(path):
-    audio = AudioSegment.from_file(path)
-    return audio
 
 def get_label_from_file(file: str):
     path = os.path.abspath(file)
