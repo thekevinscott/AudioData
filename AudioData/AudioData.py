@@ -7,6 +7,15 @@ from typing import Dict, List
 from .vggish_input import waveform_to_examples
 from pydub import AudioSegment
 
+default_returns = [
+    'samples',
+    'label',
+    [
+        'file',
+        'start_index',
+    ],
+]
+
 DEFAULTS = {
     'channels': 1,
     'bytes': 2,
@@ -94,7 +103,8 @@ class AudioData:
 
     """
     def get_data(self, type: str, split: float = None, shuffle: bool = False,
-            transforms = [], random_window: bool = True):
+            transforms = [], random_window: bool = True, returns =
+            default_returns):
         files = self._files[type].copy()
 
         #1. if random window, slice off one second of audio files
@@ -110,18 +120,10 @@ class AudioData:
         chunks = shuffle_chunks(chunks, shuffle)
 
         #5. separate into components
-        samples, audio, labels, refs = separate_chunks(chunks, [
-            'samples',
-            'audio',
-            'label',
-            [
-                'file',
-                'start_index',
-            ],
-        ])
+        chunks = separate_chunks(chunks, returns)
 
         #6. split the data
-        splits = split_data(split, samples, labels, refs)
+        splits = split_data(split, *chunks)
 
         return splits
 
@@ -164,7 +166,7 @@ class AudioData:
                         'samples': sliced_samples,
                         'vggish_samples': vggish_samples,
                         'file': file['file'],
-                        'start_index': i + file['start_index'],
+                        'start_index': start,
                         # 'audio': file['audio'][start:end],
                         'label': file['label'],
                     })
