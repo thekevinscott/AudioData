@@ -34,36 +34,6 @@ def changePitch(sound, min = -0.5, max = 0.5):
 
     return sound._spawn(sound.raw_data, overrides={'frame_rate': new_sample_rate}).set_frame_rate(44100)
 
-def pickRandomItems(arr, max = 1):
-    return sorted(arr, key=lambda *args: random.random())[0:random.randint(1, max)]
-
-def makeRandomTransforms(transforms, max_number_of_transforms, audio):
-    if len(transforms) > 0:
-        transforms_to_apply = pickRandomItems(transforms, max_number_of_transforms)
-        for transform in transforms_to_apply:
-            fn = transform['fn']
-            #print(transform['name'])
-            original_length = len(audio)
-            audio = fn(audio)
-            assert original_length == len(audio), "Lengths don't match post transform %s, original: %i, transformed: %i" % (transform['name'], original_length, len(audio))
-
-    return audio
-
-def mixWithFolder(folder, transforms = []):
-    overlays = get_files_from_dir(folder)
-    max_number_of_transforms = len(transforms)
-
-    def curriedMixWith(audio):
-        overlay = random.choice(overlays)
-        print('figure out how to pass these vals')
-        overlay_audio = load(overlay,
-                channels=1,bytes=2,frame_rate=44100)[0:len(audio)]
-        transformed_overlay = makeRandomTransforms(transforms,
-                max_number_of_transforms, overlay_audio)
-        transformed_original = makeRandomTransforms(transforms, max_number_of_transforms, audio)
-        return mixWith(transformed_original, transformed_overlay)
-    return curriedMixWith
-
 def mixWith(sound, overlay):
     if len(overlay) < len(sound):
         orig_overlay = overlay
