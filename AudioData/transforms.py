@@ -1,5 +1,5 @@
 from __future__ import print_function
-from utils import get_files_from_dir, load
+from .utils import get_files_from_dir, load
 import random
 import math
 
