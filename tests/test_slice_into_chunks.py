@@ -7,52 +7,14 @@ audioData = AudioData()
 def test_it_returns_chunks():
     audio = Sine(440).to_audio_segment()
     files = [{
-        'audio': audio[0:960],
+        'audio': audio[0:1000],
         'file': 'foo',
         'label': 'foo',
         'start_index': 0,
     }]
 
-    chunks = audioData.slice_into_chunks(files)
-    assert len(chunks) == 1
-
-def test_it_returns_chunks_despite_channels():
-    audio = Sine(440).to_audio_segment()
-    audio = audio.set_channels(2)
-    files = [{
-        'audio': audio[0:960],
-        'file': 'foo',
-        'label': 'foo',
-        'start_index': 0,
-    }]
-
-    chunks = audioData.slice_into_chunks(files)
-    assert len(chunks) == 1
-
-def test_it_returns_chunks_despite_bytes():
-    audio = Sine(440).to_audio_segment()
-    audio = audio.set_sample_width(4)
-    files = [{
-        'audio': audio[0:960],
-        'file': 'foo',
-        'label': 'foo',
-        'start_index': 0,
-    }]
-
-    chunks = audioData.slice_into_chunks(files)
-    assert len(chunks) == 1
-
-def test_it_returns_chunks_despite_frame_width():
-    audio = Sine(440).to_audio_segment()
-    audio = audio.set_frame_rate(44100 * 2)
-    files = [{
-        'audio': audio[0:960],
-        'file': 'foo',
-        'label': 'foo',
-        'start_index': 0,
-    }]
-
-    chunks = audioData.slice_into_chunks(files)
+    chunks = audioData.slice_into_single_sample_chunks(files)
+    print(len(chunks))
     assert len(chunks) == 1
 
 def test_it_returns_one_chunk_for_excess_audio():
@@ -64,7 +26,7 @@ def test_it_returns_one_chunk_for_excess_audio():
         'start_index': 0,
     }]
 
-    chunks = audioData.slice_into_chunks(files)
+    chunks = audioData.slice_into_single_sample_chunks(files)
     assert len(chunks) == 1
 
 def test_it_returns_multiple_chunks():
@@ -77,5 +39,5 @@ def test_it_returns_multiple_chunks():
         'samples': [],
     }]
 
-    chunks = audioData.slice_into_chunks(files)
+    chunks = audioData.slice_into_single_sample_chunks(files)
     assert len(chunks) == 5
