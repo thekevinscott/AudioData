@@ -94,7 +94,7 @@ class AudioData:
 
     """
     def get_data(self, type: str, split: float = None, shuffle: bool = False,
-            transforms = [], random_window: bool = True, returns = []):
+            transforms = [], random_window: bool = True):
         files = self._files[type].copy()
 
         #1. if random window, slice off one second of audio files
