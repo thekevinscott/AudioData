@@ -42,7 +42,7 @@ def get_sliced_audio_files(files, random_window):
 def get_transformed_files(files, transforms: List):
     for file in files:
         for transform in transforms:
-            transformed_audio = transform(file['audio'])
+            transformed_audio = transform(file['audio'], file)
             assert len(transformed_audio) == len(file['audio'])
             file['audio'] = transformed_audio
 
