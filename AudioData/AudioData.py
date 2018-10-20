@@ -55,7 +55,7 @@ class AudioData:
         else:
             self._files = {}
 
-    def add_data(self, type: str, data, label = None):
+    def add_data(self, type: str, data: List, label = None):
         for file in data:
             if type not in self._files:
                 self._files[type] = []
@@ -106,19 +106,18 @@ class AudioData:
             transforms = [], random_window: bool = True, returns =
             default_returns):
         files = self._files[type].copy()
-
         #1. if random window, slice off one second of audio files
         files = get_sliced_audio_files(files, random_window)
 
         #2. transform those files
         files = get_transformed_files(files, transforms)
-
+        
         #3. slice into chunks
         chunks = self.slice_into_single_sample_chunks(files)
-
+        
         #4. shuffle
         chunks = shuffle_chunks(chunks, shuffle)
-
+        
         #5. separate into components
         chunks = separate_chunks(chunks, returns)
 
@@ -150,11 +149,15 @@ class AudioData:
         chunks = []
         for file in files:
             audio = file['audio']
-            samples = audio.get_array_of_samples()
-            sample_rate = self.sample_rate
+            assert len(audio) >= 1000, "Length of audio was less than 1 and will not be included: %i for %s, %s" % (len(audio), file['file'])
             assert audio.frame_rate == self.sample_rate
             assert audio.sample_width == self.bytes
             assert audio.channels == self.channels
+            
+            samples = audio.get_array_of_samples()
+            sample_rate = self.sample_rate
+            #print(file, len(audio), np.array(samples).shape)
+            
             for i in range(0, len(samples), sample_rate):
                 start = i
                 end = start + sample_rate
@@ -171,3 +174,5 @@ class AudioData:
                         'label': file['label'],
                     })
         return chunks
+
+

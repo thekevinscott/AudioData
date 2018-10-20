@@ -34,7 +34,7 @@ def get_sliced_audio_files(files, random_window):
         if random_window:
             starting_index = get_starting_slice()
 
-        file['audio'] = file['audio'][get_starting_slice():]
+        file['audio'] = file['audio'][starting_index:]
         file['starting_index'] = starting_index
 
     return files
@@ -69,13 +69,16 @@ def split_data(split, *args):
     if split is None:
         return (args)
 
-    if len(args[0]) * split < 1:
-        raise Exception('Not enough samples for split')
-
     length = len(args[0])
+    if length == 0:
+        raise Exception('No samples provided')
+    
     for arg in args[1:]:
         if length != len(arg):
             raise Exception('Mismatch in length of arguments')
+            
+    if len(args[0]) * split < 1:
+        raise Exception('Not enough samples for split')
 
     cut = round(len(args[0])*(1-split))
 
@@ -83,3 +86,5 @@ def split_data(split, *args):
         tuple(arg[0:cut] for arg in args),
         tuple(arg[cut:] for arg in args),
     )
+
+
